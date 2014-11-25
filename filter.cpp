@@ -61,5 +61,5 @@ int Filter::GetEnergy(const std::vector<std::vector<int>>& image) {
 		}
 	}
 
-	return energy_white - energy_black;
+	return energy_black;
 }

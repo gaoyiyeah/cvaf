@@ -115,13 +115,34 @@ void FilterTraining::PrepareSamples(const string& original_wave_path,
 	for (int neg_num = 0; neg_num < pos_num * 0.2;) {
 		int neg1 = rand() % pos_num;
 		int neg2 = rand() % pos_num;
+		// Successfully generate a negative sample with different song ids.
 		if (sample_pairs[neg1].sample1.song_id != sample_pairs[neg2].sample2.song_id) {
 			SamplePair pair;
 			pair.sample1 = sample_pairs[neg1].sample1;
 			pair.sample2 = sample_pairs[neg2].sample2;
 			pair.label = false;
 			sample_pairs.push_back(pair);
-			neg_num++;
+			neg_num++;		
 		}
+	}
+	cerr << "Generate training samples done!" << endl;
+	return;
+}
+
+void FilterTraining::CalculateThreshold() {
+	thresholds.resize(filters.size());
+	for (size_t i = 0; i < filters.size(); i++) {
+		long long threshold = 0;
+		int number = 0;
+		for (size_t j = 0; j < sample_pairs.size(); j++) {
+			if (sample_pairs[j].label == false)
+				break;
+			threshold += filters[i].GetEnergy(sample_pairs[j].sample1.image);
+			threshold += filters[i].GetEnergy(sample_pairs[j].sample2.image);
+			number += 2;
+		}
+		thresholds[i] = (int)(threshold / number);
+		cout << thresholds[i] << endl;
+		getchar();
 	}
 }

@@ -8,10 +8,14 @@ class Sample {
 public:
 	int song_id;
 	int frame_id;
-	int image[82][33];
+	std::vector<std::vector<int>> image;
 
 	Sample(){};
-	Sample(int s_id, int f_id) : song_id(s_id), frame_id(f_id){}
+	Sample(int s_id, int f_id) : song_id(s_id), frame_id(f_id) {
+		image.resize(82);
+		for (int i = 0; i < 82; i++)
+			image[i].resize(33);
+	}
 };
 
 class SamplePair {
@@ -23,10 +27,12 @@ public:
 
 class FilterTraining {
 public:
-	std::vector<Filter> filters;
 	void GenerateFilter();
 	void PrepareSamples(const std::string& original_wave_path,
 		const std::string& degraded_wave_path);
+	void CalculateThreshold();
 private:
 	std::vector<SamplePair> sample_pairs;
+	std::vector<Filter> filters;
+	std::vector<int> thresholds; // Thresholds for filters.
 };

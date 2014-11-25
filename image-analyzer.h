@@ -34,5 +34,5 @@ private:
 	
 	int _frame_number; // The total number of frames in the wave file.
 	short _all_time_data[SamplesVectorSize];
-	double _energy[SUB_FINGER_NUM][33]; // energy[n,m] indicates the energy in nth frame and mth frequency band.
+	int _energy[SUB_FINGER_NUM][33]; // energy[n,m] indicates the energy in nth frame and mth frequency band.
 };

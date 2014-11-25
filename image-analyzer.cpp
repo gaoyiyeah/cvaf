@@ -79,7 +79,7 @@ int ImageAnalyzer::_Energying(long all_time_data_size) {
 			}
 		}
 		for (int i = 0; i < 33; i++)
-			_energy[_frame_number][i] = bind_energy[i];
+			_energy[_frame_number][i] = (int)bind_energy[i];
 
 		//ÏÂÒ»Ö¡
 		_frame_number++;
