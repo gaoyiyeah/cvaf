@@ -23,16 +23,30 @@ public:
 	Sample sample1;
 	Sample sample2;
 	bool label; // True means they belong to the same song.
+	double weight;
+};
+
+class SampleEnergy {
+public:
+	double energy1;
+	double energy2;
 };
 
 class FilterTraining {
 public:
-	void GenerateFilter();
-	void PrepareSamples(const std::string& original_wave_path,
+	std::vector<Filter> Training(const std::string& original_wave_path,
 		const std::string& degraded_wave_path);
-	void CalculateThreshold();
 private:
+	void _GenerateFilter();
+	void _PrepareSamples(const std::string& original_wave_path,
+		const std::string& degraded_wave_path);
+	void _CalculateThreshold();
+	void _PreComputeEnergy();
+	void _Training(std::vector<Filter>* selected_filters);
+
 	std::vector<SamplePair> sample_pairs;
 	std::vector<Filter> filters;
 	std::vector<int> thresholds; // Thresholds for filters.
+	// energy[i][j] denotes the energy of jth sample in ith filter.
+	std::vector<std::vector<SampleEnergy>> energy;
 };

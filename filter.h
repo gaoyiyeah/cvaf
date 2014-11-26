@@ -11,5 +11,7 @@ public:
 	int time_end;
 	int band_start;
 	int band_end;
+	int threshold;
+	double confidence;
 	int GetEnergy(const std::vector<std::vector<int>>& image);
 };
