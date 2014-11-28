@@ -1,7 +1,7 @@
 #pragma once
-
 #include <iostream>
 #include <vector>
+#include "global.h"
 
 class Filter {
 public:
@@ -13,5 +13,7 @@ public:
 	int band_end;
 	int threshold;
 	double confidence;
-	int GetEnergy(const std::vector<std::vector<int>>& image);
+	// Must insure that start_row + 82 is smaller than the total rows of image.
+	// The image size is alwayls 82 * 33.
+	int GetEnergy(int image[][33], int start_row = 0);
 };

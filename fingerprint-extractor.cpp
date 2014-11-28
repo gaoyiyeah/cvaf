@@ -4,7 +4,7 @@
 #include <vector>
 #include "filter-training.h"
 #include "global.h"
-#include "image-analyzer.h"
+#include "fingerprint-extractor.h"
 #include "util.h"
 
 using namespace std;
@@ -18,9 +18,8 @@ const double freq_bind[] =
 1262.68, 1337.40, 1416.54, 1500.36, 1589.14,
 1683.17, 1782.77, 1888.27, 2000.00 }; // Bands in [0, 33]
 
-ImageAnalyzer::~ImageAnalyzer(){}
-
-void ImageAnalyzer::CreateImage() {
+void FingerprintExtractor::CreateImage(const string& filepath) {
+	this->_wavepath = filepath;
 	_wp.Clear();
 	_wp.OpenWaveFile(_wavepath.c_str());
 	_wp.MakeTargetSamplesData();
@@ -31,11 +30,26 @@ void ImageAnalyzer::CreateImage() {
 	return ;
 }
 
-void ImageAnalyzer::GetSamples(vector<Sample>* samples) {
+void FingerprintExtractor::CalcFingerprint(const string& filepath,
+	vector<Filter>& filters) {
+	this->CreateImage(filepath);
+
+	for (int frame_idx = 0; frame_idx < _frame_number; frame_idx++) {
+		for (size_t i = 0; i < filters.size(); i++) {
+			int sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
+			if (sign > 0)
+				fingers[frame_idx][i] = '1';
+			else
+				fingers[frame_idx][i] = '0';
+		}
+	}
+}
+
+void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	samples->clear();
 	int frame_idx = 0;
 	// Get a sample every 100 frames.
-	for (int start_pos = 0; start_pos + 82 < _frame_number; start_pos += 100) {
+	for (int start_pos = 0; start_pos < _frame_number; start_pos += 100) {
 		int song_id = this->GetFileId();
 		Sample sample(song_id, frame_idx++);
 		for (int i = 0; i < 82; i++) {
@@ -48,7 +62,16 @@ void ImageAnalyzer::GetSamples(vector<Sample>* samples) {
 	return ;
 }
 
-int ImageAnalyzer::_Energying(long all_time_data_size) {
+void FingerprintExtractor::getQueryFinger(bitset<32>* new_finger, int& size) {
+	size = _frame_number;
+	for (int i = 0; i < _frame_number; i++) {
+		bitset<32> item(fingers[i]);
+		new_finger[i] = item;
+	}
+	return;
+}
+
+int FingerprintExtractor::_Energying(long all_time_data_size) {
 	memset(_energy, 0, sizeof(double)* QUERY_FINGER_NUM * 33);
 	_frame_number = 0;
 	int start = 0;
@@ -85,10 +108,11 @@ int ImageAnalyzer::_Energying(long all_time_data_size) {
 		_frame_number++;
 		start += jump_samples;
 	}
+	_frame_number -= 82;
 	return _frame_number;
 }
 
-int ImageAnalyzer::_SelectBind(double point_freq) {
+int FingerprintExtractor::_SelectBind(double point_freq) {
 	int start = 0;
 	int end = 33;
 	int mid = 0;
@@ -104,15 +128,25 @@ int ImageAnalyzer::_SelectBind(double point_freq) {
 	return -1;
 }
 
-void ImageAnalyzer::SetWavepath(const string& filepath) {
-	_wavepath = filepath;
-}
-
-int ImageAnalyzer::GetFrameNumber() {
+int FingerprintExtractor::GetFrameNumber() {
 	return _frame_number;
 }
 
-int ImageAnalyzer::GetFileId() {
+int FingerprintExtractor::GetFileId() {
 	string originFile = _wavepath.substr(_wavepath.find_last_of("\\") + 1, _wavepath.size());
 	return stoi(originFile.substr(0, originFile.find(".")));
+}
+
+void FingerprintExtractor::PrintFingerToFile(const string& fingerFile) {
+	FILE *fp = fopen(fingerFile.c_str(), "w");
+	string sub_finger;
+	for (int i = 0; i < _frame_number; i++) {
+		sub_finger = "";
+		for (int j = 0; j < 32; j++)
+			sub_finger.push_back(fingers[i][j]);
+		bitset<32> b(sub_finger);
+		fprintf(fp, "%lu\n", b.to_ulong());
+	}
+	fclose(fp);
+	return;
 }

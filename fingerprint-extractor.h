@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "fft.h"
+#include "filter.h"
 #include "filter-training.h"
 #include "global.h"
 #include "wave-processor.h"
@@ -14,14 +15,16 @@ const double timeInterval = 0.0116;
 const double frameInterval = 0.37;
 const int sampleRate = 5000;
 
-class ImageAnalyzer {
+class FingerprintExtractor {
 public:
-	ImageAnalyzer(const std::string& filepath) : _wp(5000), _wavepath(filepath){};
-	~ImageAnalyzer();
-	void CreateImage();
+	FingerprintExtractor() : _wp(5000){};
+	void CreateImage(const std::string& filepath);
 	void GetSamples(std::vector<Sample>* samples);
+	void CalcFingerprint(const std::string& filepath,
+		std::vector<Filter>& filters);
+	void getQueryFinger(bitset<32>* new_finger, int& size);
+	void PrintFingerToFile(const std::string& filepath);
 	int GetFrameNumber();
-	void SetWavepath(const std::string& filepath);
 	int GetFileId();
 
 private:
@@ -29,10 +32,10 @@ private:
 	WaveProcessor _wp;
 	int _SelectBind(double point_freq);
 	int _Energying(long all_time_data_size);
-	void _Fingerprinting();
-
 	
 	int _frame_number; // The total number of frames in the wave file.
 	short _all_time_data[SamplesVectorSize];
-	int _energy[SUB_FINGER_NUM][33]; // energy[n,m] indicates the energy in nth frame and mth frequency band.
+	// energy[n,m] indicates the energy in nth frame and mth frequency band.
+	int _energy[SUB_FINGER_NUM][33];
+	char fingers[SUB_FINGER_NUM][32]; // final fingerprint
 };
