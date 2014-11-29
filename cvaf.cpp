@@ -12,6 +12,7 @@ using namespace std;
 int yes = 0;
 int not_found = 0;
 vector<Filter> filters;
+Searcher searcher;
 
 void ExtractFingerprint(vector<string>& all_files) {
 	FingerprintExtractor extractor;
@@ -23,20 +24,22 @@ void ExtractFingerprint(vector<string>& all_files) {
 		extractor.PrintFingerToFile(FINGER_ROOTPATH + "\\" + filename + ".txt");
 		cerr << "File: " << f << " done." << endl;
 	}
+	cerr << "Extract done." << endl;
 }
 
 void SearchOneFile(vector<string>& allQueryFiles) {
 	FingerprintExtractor extractor;
-	Searcher searcher;
 	for (int i = 0; i < (signed)allQueryFiles.size(); i++) {
 		cout<<allQueryFiles[i]<<endl;
 		extractor.CalcFingerprint(allQueryFiles[i], filters);
 		bitset<32> finger_block[QUERY_FINGER_NUM];
 		int size = 0;
-		extractor.getQueryFinger(finger_block, size);
 		int queryId = extractor.GetFileId();
+		extractor.getQueryFinger(finger_block, size);
+		//extractor.PrintFingerToFile(QUERY_WAVE_PATH + "\\" + to_string(queryId) + ".txt");
+		
 		int tmp_dif = 0;
-		int result = searcher.search(finger_block, size, tmp_dif);
+		int result = searcher.search(finger_block, size);
 
 		if (result == -1) {
 			cout<<"file: "<<queryId<<" Not found"<<endl;
@@ -55,11 +58,10 @@ int main() {
 	string original_wav = "E:\\yangguang\\cvaf\\data\\training\\original_wav";
 	string degraded_wav = "E:\\yangguang\\cvaf\\data\\training\\32kbps_wav";
 	filters = ft.LoadFilters("E:\\yangguang\\cvaf\\data\\filters.dat");
-	/*
-	filters = ft.Training(original_wav, degraded_wav);
-	ft.PringFiltersToFile("E:\\yangguang\\cvaf\\data\\filters.dat");
-	cerr << "print done" << endl;
-	getchar();
+	//filters = ft.Training(original_wav, degraded_wav);
+	//ft.PringFiltersToFile("E:\\yangguang\\cvaf\\data\\filters.dat");
+	//cerr << "Print filters done!" << endl;
+	//getchar();
 	/*
 	int i = 0;
 	for (const auto& f : filters) {
@@ -69,17 +71,16 @@ int main() {
 		cout << endl;
 		i++;
 	}
-	*/
-	/*
-	vector<string> all_files = Util::load_dir(
-		"E:\\yangguang\\cvaf\\data\\training\\original_wav", "wav");
-	ExtractFingerprint(all_files);
 	
+	vector<string> all_files = Util::load_dir(
+		"E:\\yangguang\\cvaf\\data\\database", "wav");
+	ExtractFingerprint(all_files);
+	getchar();
 	end = clock();
 	cout << "Time: " << (end - start) / CLOCKS_PER_SEC << endl;
 	getchar();
 	*/
-	Searcher searcher;
+
 	searcher.build_index(FINGER_ROOTPATH);
 	cout << searcher.index.size() << endl;
 	vector<string> query_files = Util::load_dir(QUERY_WAVE_PATH, "wav");

@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#define ONE_BIT_SEARCH
-#define TWO_BIT_SEARCH
+//#define ONE_BIT_SEARCH
+//#define TWO_BIT_SEARCH
 
 class MusicInfo {
 public:
@@ -22,8 +22,8 @@ const int OUTPUT_THREAD = 10;
 const int THREAD_NUM = 10;
 const int SUB_FINGER_NUM = 380000; // 380000, there are 186056 subfingerprints in 90408 with 23.2
 // 115 for 3 seconds, 204 for 5 seconds with hop 23.2 ms,
-// 409 for 5 seconds, 500 for 6 seconds with hop 11.6 ms.
-const int QUERY_FINGER_NUM = 409;
+// 325 for 5 seconds, 500 for 6 seconds with hop 11.6 ms.
+const int QUERY_FINGER_NUM = 325;
 const int THREHOLD_BITS = (int)(THRESHOLD * 32 * QUERY_FINGER_NUM);
 
 const std::string WAVE_ROOTPATH = "Z:\\200000_s48_24000hz_wav\\";

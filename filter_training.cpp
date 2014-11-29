@@ -203,15 +203,15 @@ void FilterTraining::_Training() {
 		start = clock();
 		// 1. Find the hypothesis that minimizes weighted error.
 		size_t selected_filter = -1;
-		int min_err = INT_MAX;
+		double min_err = INT_MAX;
 		for (size_t i = 0; i < _filters.size(); i++) {
-			int local_min_err = 0;
+			double local_min_err = 0;
 			for (size_t j = 0; j < _sample_pairs.size(); j++) {
 				bool sign1 = (_energy[i][j].energy1 - _filters[i].threshold) > 0 ? true : false;
 				bool sign2 = (_energy[i][j].energy2 - _filters[i].threshold) > 0 ? true : false;
 				bool re = sign1 & sign2;
 				if (re != _sample_pairs[j].label)
-					local_min_err++;
+					local_min_err += _sample_pairs[j].weight;
 			}
 			if (local_min_err < min_err &&
 				find(selected_filters_idx.begin(), selected_filters_idx.end(), i) == selected_filters_idx.end()) {
@@ -221,7 +221,7 @@ void FilterTraining::_Training() {
 		}
 		_selected_filters.push_back(_filters[selected_filter]);
 		selected_filters_idx.push_back(selected_filter);
-		//cerr << "Select filter: " << selected_filter << endl;
+		cerr << "Select filter: " << selected_filter << endl;
 		// 2. Calculate weight error.
 		double weight_error = 0;
 		Filter& filter = _filters[selected_filter];

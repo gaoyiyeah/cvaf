@@ -49,7 +49,7 @@ void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	samples->clear();
 	int frame_idx = 0;
 	// Get a sample every 100 frames.
-	for (int start_pos = 0; start_pos < _frame_number; start_pos += 100) {
+	for (int start_pos = 0; start_pos < _frame_number; start_pos += 1000) {
 		int song_id = this->GetFileId();
 		Sample sample(song_id, frame_idx++);
 		for (int i = 0; i < 82; i++) {
