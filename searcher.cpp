@@ -12,97 +12,11 @@
 
 using namespace std;
 
-bool comp(pair<int, MusicInfo> a, pair<int, MusicInfo> b) {
+int hit_size = 0;
+
+bool comp(pair<unsigned int, MusicInfo> a,
+	pair<unsigned int, MusicInfo> b) {
 	return a.first < b.first;
-}
-
-int Searcher::search(bitset<32>* finger_block, const int block_size) {
-	std::map<int, int> result_map;
-	//exact match
-	//从查询指纹块的第一条指纹开始
-	for (int i = 0; i < block_size; i++) {
-		unsigned long key = finger_block[i].to_ulong();
-		if (key == 0)
-			continue;
-		_inner_search(key, finger_block, block_size, i, &result_map);
-	}
-
-#ifdef ONE_BIT_SEARCH
-	for (int i = 0; i < block_size; i++) {
-		for (int j = 0; j < 32; j++) {
-			bitset<32> item = finger_block[i];
-			item.flip(j);
-			unsigned long key = item.to_ulong();
-			if (key == 0)
-				continue;
-			_inner_search(key, finger_block, block_size, i, &result_map);
-		}
-	}
-#endif
-
-#ifdef TWO_BIT_SEARCH
-	for (int i = 0; i < block_size; i++) {
-		for (int j = 0; j < 31; j++) {
-			for (int k = j + 1; k < 32; k++) {
-				bitset<32> item = finger_block[i];
-				item.flip(j);
-				item.flip(k);
-				unsigned long key = item.to_ulong();
-				if (key == 0)
-					continue;
-				_inner_search(key, finger_block, block_size, i, &result_map);
-
-			}
-		}
-	}
-#endif
-
-#ifdef THREE_BIT_SEARCH
-	for (int i = 0; i < block_size; i++) {
-		for (int j = 0; j < 30; j++)	{
-			for (int k = j + 1; k < 31; k++)	{
-				for (int m = k + 1; m < 32; m++)	{
-					bitset<32> item = finger_block[i];
-					item.flip(j);
-					item.flip(k);
-					item.flip(m);
-					unsigned long key = item.to_ulong();
-					if (key == 0)
-						continue;
-					result = _inner_search(key, finger_block, block_size, i, temp_dif);
-					if (result != -1)
-						return result;
-				}
-			}
-		}
-	}
-#endif
-	if (result_map.size() > 0)
-		return result_map.begin()->second;
-	else
-		return -1;
-}
-
-int Searcher::Clear() {
-	index.clear();
-	finger_database.clear();
-	return 0;
-}
-
-long long Searcher::_binary_search(unsigned int key) {
-	long long start = 0;
-	long long end = index.size() - 1;
-	long long mid;
-	while (end >= start) {
-		mid = start + (end - start) / 2;
-		if (key < index[mid].first)
-			end = mid - 1;
-		else if (key > index[mid].first)
-			start = mid + 1;
-		else
-			return mid;
-	}
-	return -1;
 }
 
 int Searcher::build_index(string dirPath) {
@@ -119,6 +33,7 @@ int Searcher::build_index(string dirPath) {
 	//cout<<"index size: "<<index.size()<<endl;
 	sort_start = clock();
 	sort(index.begin(), index.end(), comp);
+
 	sort_end = clock();
 	double sort_time = (double)(sort_end - sort_start) / CLOCKS_PER_SEC;
 	cout << "Sort time: " << sort_time << endl;
@@ -167,13 +82,86 @@ int Searcher::_build_one_file_index(const string filepath) {
 	return i;
 }
 
-void Searcher::_inner_search(unsigned long key, bitset<32>* finger_block,
-	const int block_size, const int i, map<int, int>* result_map) {
+int Searcher::search(bitset<32>* finger_block, const int block_size) {
+	std::map<double, int> result_map;
+	//exact match
+	//从查询指纹块的第一条指纹开始
+	for (int i = 0; i < block_size; i++) {
+		unsigned long key = finger_block[i].to_ulong();
+		if (key == 0)
+			continue;
+		int result = _inner_search(key, finger_block, block_size, i, &result_map);
+		if (result > 0)
+			return result;
+	}
+
+#ifdef ONE_BIT_SEARCH
+	for (int i = 0; i < block_size; i++) {
+		for (int j = 0; j < 32; j++) {
+			bitset<32> item = finger_block[i];
+			item.flip(j);
+			unsigned long key = item.to_ulong();
+			if (key == 0)
+				continue;
+			int result = _inner_search(key, finger_block, block_size, i, &result_map);
+				if (result > 0)
+					return result;
+		}
+	}
+#endif
+
+#ifdef TWO_BIT_SEARCH
+	for (int i = 0; i < block_size; i++) {
+		for (int j = 0; j < 31; j++) {
+			for (int k = j + 1; k < 32; k++) {
+				bitset<32> item = finger_block[i];
+				item.flip(j);
+				item.flip(k);
+				unsigned long key = item.to_ulong();
+				if (key == 0)
+					continue;
+				_inner_search(key, finger_block, block_size, i, &result_map);
+
+			}
+		}
+	}
+#endif
+
+#ifdef THREE_BIT_SEARCH
+	for (int i = 0; i < block_size; i++) {
+		for (int j = 0; j < 30; j++)	{
+			for (int k = j + 1; k < 31; k++)	{
+				for (int m = k + 1; m < 32; m++)	{
+					bitset<32> item = finger_block[i];
+					item.flip(j);
+					item.flip(k);
+					item.flip(m);
+					unsigned long key = item.to_ulong();
+					if (key == 0)
+						continue;
+					result = _inner_search(key, finger_block, block_size, i, temp_dif);
+					if (result != -1)
+						return result;
+				}
+			}
+		}
+	}
+#endif
+	if (result_map.size() > 0) {
+		cerr << result_map.begin()->first << endl;
+		return result_map.begin()->second;
+	}
+	else
+		return -1;
+}
+
+int Searcher::_inner_search(unsigned long key, bitset<32>* finger_block,
+	const int block_size, const int i, map<double, int>* result_map) {
 	time_t search_start, search_end;
 	search_start = clock();
 	long long result = _binary_search(key);
 	if (result == -1)
-		return;
+		return -1;
 	long long start = result;
 	long long end = result;
 	do {
@@ -187,20 +175,24 @@ void Searcher::_inner_search(unsigned long key, bitset<32>* finger_block,
 	search_end = clock();
 	//duration_search += (double)(search_end - search_start) / CLOCKS_PER_SEC;
 	for (long long iter = start; iter <= end; iter++) {
-		int diffbits = compare_bitsets(index[iter].second.id, finger_block,
+		double diffbits = compare_bitsets(index[iter].second.id, finger_block,
 			block_size, i, index[iter].second.i_frame);
-		if (diffbits <= THREHOLD_BITS) {
+		if (diffbits <= BIT_ERROR_RATE) {
+			hit_size++;
 			(*result_map)[diffbits] = index[iter].second.id;
+			if (diffbits <= MUST_RIGHT) {
+				return index[iter].second.id;
+			}
 		}
 	}
-	return;
+	return -1;
 }
 
 /*
 *i_frame_in_block: 在query指纹块中命中的index
 *i_frame_in_file: 在file中命中的index
 */
-int Searcher::compare_bitsets(int id, bitset<32>* finger_block, const int block_size, \
+double Searcher::compare_bitsets(int id, bitset<32>* finger_block, const int block_size, \
 	const int i_frame_in_block, int i_frame_in_file) {
 	if (i_frame_in_file - i_frame_in_block < 0)
 		return INT_MAX;//表示错误，返回1.0
@@ -221,7 +213,23 @@ int Searcher::compare_bitsets(int id, bitset<32>* finger_block, const int block_
 
 	//time_compare_finish = clock();
 	//duration_compare += (double)(time_compare_finish - time_compare_start)/CLOCKS_PER_SEC;
-	return diff_bits;
+	return (double)diff_bits / (32 * QUERY_FINGER_NUM);
+}
+
+long long Searcher::_binary_search(unsigned int key) {
+	long long start = 0;
+	long long end = index.size() - 1;
+	long long mid;
+	while (end >= start) {
+		mid = start + (end - start) / 2;
+		if (key < index[mid].first)
+			end = mid - 1;
+		else if (key > index[mid].first)
+			start = mid + 1;
+		else
+			return mid;
+	}
+	return -1;
 }
 
 int Searcher::LoadIndex(string filepath) {
@@ -319,5 +327,11 @@ int Searcher::OutputIndexToFile(string filepath) {
 	}
 	fout.write(reinterpret_cast<char *>(&index[0]), index.size() * sizeof(index[0]));
 	fout.close();
+	return 0;
+}
+
+int Searcher::Clear() {
+	index.clear();
+	finger_database.clear();
 	return 0;
 }

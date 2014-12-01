@@ -209,7 +209,7 @@ void FilterTraining::_Training() {
 			for (size_t j = 0; j < _sample_pairs.size(); j++) {
 				bool sign1 = (_energy[i][j].energy1 - _filters[i].threshold) > 0 ? true : false;
 				bool sign2 = (_energy[i][j].energy2 - _filters[i].threshold) > 0 ? true : false;
-				bool re = sign1 & sign2;
+				bool re = !(sign1 ^ sign2);
 				if (re != _sample_pairs[j].label)
 					local_min_err += _sample_pairs[j].weight;
 			}
@@ -229,7 +229,7 @@ void FilterTraining::_Training() {
 		for (size_t i = 0; i < _sample_pairs.size(); i++) {
 			bool sign1 = (_energy[selected_filter][i].energy1 - filter.threshold) > 0 ? true : false;
 			bool sign2 = (_energy[selected_filter][i].energy2 - filter.threshold) > 0 ? true : false;
-			bool re = sign1 & sign2;
+			bool re = !(sign1 ^ sign2);
 			if (re != _sample_pairs[i].label) {
 				weight_error += _sample_pairs[i].weight;
 				error_samples.push_back(i);

@@ -1,5 +1,7 @@
 #include <ctime>
+#include <fstream>
 #include <iostream>
+#include <thread>
 #include <vector>
 #include "filter.h"
 #include "filter-training.h"
@@ -13,6 +15,9 @@ int yes = 0;
 int not_found = 0;
 vector<Filter> filters;
 Searcher searcher;
+
+extern double duration_get_energy;
+extern int hit_size;
 
 void ExtractFingerprint(vector<string>& all_files) {
 	FingerprintExtractor extractor;
@@ -38,7 +43,6 @@ void SearchOneFile(vector<string>& allQueryFiles) {
 		extractor.getQueryFinger(finger_block, size);
 		//extractor.PrintFingerToFile(QUERY_WAVE_PATH + "\\" + to_string(queryId) + ".txt");
 		
-		int tmp_dif = 0;
 		int result = searcher.search(finger_block, size);
 
 		if (result == -1) {
@@ -47,45 +51,62 @@ void SearchOneFile(vector<string>& allQueryFiles) {
 		} else if (result == queryId) {
 			cout<<"Match!  "<<result<<endl;
 			yes++;
+		} else {
+			cout << queryId << "\t" << result << endl;
 		}
 	}
 }
 
+void PrintFilters(vector<Filter>& filters) {
+	ofstream fout;
+	fout.open("E:\\yangguang\\cvaf\\data\\tmp.txt", ios::out);
+	fout << "Type\tTime end\tBand start\tBand end\t" << endl;
+	for (const auto& f : filters)
+		fout << f.type << "\t" << f.time_end << "\t" << f.band_start << "\t" << f.band_end << endl;
+	fout.close();
+}
+
 int main() {
 	time_t start, end;
-	start = clock();
 	FilterTraining ft;
 	string original_wav = "E:\\yangguang\\cvaf\\data\\training\\original_wav";
 	string degraded_wav = "E:\\yangguang\\cvaf\\data\\training\\32kbps_wav";
 	filters = ft.LoadFilters("E:\\yangguang\\cvaf\\data\\filters.dat");
-	//filters = ft.Training(original_wav, degraded_wav);
-	//ft.PringFiltersToFile("E:\\yangguang\\cvaf\\data\\filters.dat");
-	//cerr << "Print filters done!" << endl;
-	//getchar();
 	/*
-	int i = 0;
-	for (const auto& f : filters) {
-		cout << i << endl;
-		cout << "Type: " << f.type << "\tTime end: " << f.time_end << endl;
-		cout << "Band start: " << f.band_start << "\tBand end: " << f.band_end << endl;
-		cout << endl;
-		i++;
-	}
-	
-	vector<string> all_files = Util::load_dir(
-		"E:\\yangguang\\cvaf\\data\\database", "wav");
-	ExtractFingerprint(all_files);
+	filters = ft.Training(original_wav, degraded_wav);
+	PrintFilters(filters);
+	ft.PringFiltersToFile("E:\\yangguang\\cvaf\\data\\filters.dat");
+	cerr << "Print filters done!" << endl;
+	cout << "Time: " << duration << endl;
 	getchar();
+	*/
+	/*
+	start = clock();
+	vector<string> allFiles = Util::load_dir(WAVE_ROOTPATH, "wav");
+	vector<vector<string>> allQueryFiles(THREAD_NUM);
+	for (int i = 0; i < allFiles.size(); i++)
+		allQueryFiles[i%THREAD_NUM].push_back(allFiles[i]);
+	vector<thread> threads;
+	for (int i = 0; i < THREAD_NUM; i++)
+		threads.push_back(thread(ExtractFingerprint, allQueryFiles[i]));
+	for (int i = 0; i < THREAD_NUM; i++)
+		threads[i].join();
+	
+	cout << "Extract Done!" << endl;
 	end = clock();
 	cout << "Time: " << (end - start) / CLOCKS_PER_SEC << endl;
 	getchar();
 	*/
 
 	searcher.build_index(FINGER_ROOTPATH);
-	cout << searcher.index.size() << endl;
+	start = clock();
 	vector<string> query_files = Util::load_dir(QUERY_WAVE_PATH, "wav");
 	SearchOneFile(query_files);
-	cout << "Hello, world!" << endl;
+	end = clock();
+	cout << "Yes: " << yes << endl;
+	cout << "Time: " << (double)(end - start) / CLOCKS_PER_SEC << endl;
+	cout << "Time for getting energy: " << duration_get_energy << endl;
+	cout << "Hit size: " << hit_size << endl;
 	getchar();
 	return 0;
 }

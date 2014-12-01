@@ -1,4 +1,5 @@
 #include <bitset>
+#include <ctime>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -8,6 +9,9 @@
 #include "util.h"
 
 using namespace std;
+
+double duration_get_energy = 0;
+time_t energy_start, energy_end;
 
 const double freq_bind[] =
 { 300.000, 317.752, 336.554, 356.469, 377.563,
@@ -33,7 +37,7 @@ void FingerprintExtractor::CreateImage(const string& filepath) {
 void FingerprintExtractor::CalcFingerprint(const string& filepath,
 	vector<Filter>& filters) {
 	this->CreateImage(filepath);
-
+	energy_start = clock();
 	for (int frame_idx = 0; frame_idx < _frame_number; frame_idx++) {
 		for (size_t i = 0; i < filters.size(); i++) {
 			int sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
@@ -43,6 +47,8 @@ void FingerprintExtractor::CalcFingerprint(const string& filepath,
 				fingers[frame_idx][i] = '0';
 		}
 	}
+	energy_end = clock();
+	duration_get_energy += (double)(energy_end - energy_start) / CLOCKS_PER_SEC;
 }
 
 void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
