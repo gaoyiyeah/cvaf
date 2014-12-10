@@ -11,7 +11,6 @@
 
 extern const int NumBinsInFftWinM; // 2048
 extern const int NumSamplesPerFrameM; //1850
-const double timeInterval = 0.0116;
 const double frameInterval = 0.37;
 const int sampleRate = 5000;
 
@@ -36,6 +35,6 @@ private:
 	int _frame_number; // The total number of frames in the wave file.
 	short _all_time_data[SamplesVectorSize];
 	// energy[n,m] indicates the energy in nth frame and mth frequency band.
-	int _energy[SUB_FINGER_NUM][33];
+	double _energy[SUB_FINGER_NUM][33];
 	char fingers[SUB_FINGER_NUM][32]; // final fingerprint
 };

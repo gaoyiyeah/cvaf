@@ -69,14 +69,13 @@ void Util::load_dir_specific(std::vector<std::vector<std::string>>& allQueryFile
 	filename = filename.substr(0, filename.find("."));
 	int i_filename = stoi(filename);
 	int m = i_filename % THREAD_NUM;
-	allQueryFiles[m].push_back(string(fileinfo.name));
+	allQueryFiles[m].push_back(dirpath + "\\" + string(fileinfo.name));
 	while (!_findnext(handle, &fileinfo)) {
 		string filename = string(fileinfo.name);
 		filename = filename.substr(0, filename.find("."));
 		i_filename = stoi(filename);
 		m = i_filename % THREAD_NUM;
-		//path = std::string(dirpath + "\\" + fileinfo.name);
-		allQueryFiles[m].push_back(string(fileinfo.name));
+		allQueryFiles[m].push_back(dirpath + "\\" + string(fileinfo.name));
 	}
 	_findclose(handle);
 	return;

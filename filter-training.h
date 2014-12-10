@@ -8,7 +8,7 @@ class Sample {
 public:
 	int song_id;
 	int frame_id;
-	int image[82][33];
+	double image[82][33];
 
 	Sample(){};
 	Sample(int s_id, int f_id) : song_id(s_id), frame_id(f_id) {}

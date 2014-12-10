@@ -4,8 +4,8 @@
 
 using namespace std;
 
-int Filter::GetEnergy(int image[][33], int start_row) {
-	int energy_black = 0, energy_white = 0;
+double Filter::GetEnergy(double image[][33], int start_row) {
+	double energy_black = 0, energy_white = 0;
 	if (type == 1) {
 		int band_mid = (band_start + band_end) / 2;
 		for (int i = time_start; i < time_end; i++) {
@@ -60,6 +60,5 @@ int Filter::GetEnergy(int image[][33], int start_row) {
 				energy_white += image[start_row + i][j];
 		}
 	}
-
 	return energy_black - energy_white;
 }

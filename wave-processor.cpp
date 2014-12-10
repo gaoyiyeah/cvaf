@@ -43,8 +43,6 @@ WaveProcessor::~WaveProcessor()
 {
 	if (m_pfWaveR)
 		fclose(m_pfWaveR);
-	if (m_newlyMadeSamples);
-	//free(m_newlyMadeSamples);
 }
 
 void WaveProcessor::CloseWaveFile()
@@ -52,11 +50,6 @@ void WaveProcessor::CloseWaveFile()
 	if (m_pfWaveR) {
 		fclose(m_pfWaveR);
 		m_pfWaveR = NULL;
-	}
-	if (m_newlyMadeSamples);
-	{
-		//free(m_newlyMadeSamples);
-		//m_newlyMadeSamples = NULL;
 	}
 }
 
@@ -257,7 +250,7 @@ int WaveProcessor::MakeTargetSamplesData()
 					lval = *((short *)szOrginalSampsBuffer);
 					lval += *(((short *)szOrginalSampsBuffer) + 1);
 					lval /= 2;
-					m_newlyMadeSamples[nNumNewlyMadeSamps] = lval;
+					m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)lval;
 					nNumNewlyMadeSamps++;
 				}
 
@@ -271,10 +264,10 @@ int WaveProcessor::MakeTargetSamplesData()
 					// 根据欠采样点下标，。。。
 					iTargetSampG = iTargetSampStartG + nNumNewlyMadeSamps;
 					// 计算其对应的原采样点下标
-					iOriginalSampG = (double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5;
+					iOriginalSampG = (long)((double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5);
 					if (iOriginalSampG > iOriginalSampStartG + uNumOrigSampsRead - 1) {
 						// 还未读到“目标原采样点”，。。。
-						iOriginalSampStartG += uNumOrigSampsRead;
+						iOriginalSampStartG += (long)uNumOrigSampsRead;
 						break;
 					}
 					// 目标原采样点在缓存中的位置
@@ -296,7 +289,7 @@ int WaveProcessor::MakeTargetSamplesData()
 							lval /= 2;
 							total += lval;
 						}
-						m_newlyMadeSamples[nNumNewlyMadeSamps] = total / (sampleNum + 1);
+						m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)(total / (sampleNum + 1));
 
 					}
 					//否则，利用FIR滤波器使用16个采样点
@@ -307,9 +300,9 @@ int WaveProcessor::MakeTargetSamplesData()
 							lval = *(((short *)puchar) - i);	// 本采样的第一个声道
 							lval += *(((short *)puchar) - i + 1);	// 本采样的第二个声道
 							lval /= 2;
-							total += lval * coefficient[i];
+							total += (long)(lval * coefficient[i]);
 						}
-						m_newlyMadeSamples[nNumNewlyMadeSamps] = total;
+						m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)total;
 					}
 					nNumNewlyMadeSamps++;	// 本批欠采样个数计数
 
@@ -346,7 +339,7 @@ int WaveProcessor::MakeTargetSamplesData()
 					lval += *(((char *)szOrginalSampsBuffer) + 1);
 					lval *= 256;
 					lval /= 2;
-					m_newlyMadeSamples[nNumNewlyMadeSamps] = lval;
+					m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)lval;
 					nNumNewlyMadeSamps++;
 				}
 
@@ -360,10 +353,10 @@ int WaveProcessor::MakeTargetSamplesData()
 					// 根据欠采样点下标，。。。
 					iTargetSampG = iTargetSampStartG + nNumNewlyMadeSamps;
 					// 计算其对应的原采样点下标
-					iOriginalSampG = (double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5;
+					iOriginalSampG = (long)((double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5);
 					if (iOriginalSampG > iOriginalSampStartG + uNumOrigSampsRead - 1) {
 						// 还未读到“目标原采样点”，。。。
-						iOriginalSampStartG += uNumOrigSampsRead;
+						iOriginalSampStartG += (long)uNumOrigSampsRead;
 						break;
 					}
 					// 目标原采样点在缓存中的位置
@@ -386,7 +379,7 @@ int WaveProcessor::MakeTargetSamplesData()
 							lval /= 2;
 							total += lval;
 						}
-						m_newlyMadeSamples[nNumNewlyMadeSamps] = total / (sampleNum + 1);
+						m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)(total / (sampleNum + 1));
 
 					}
 					//否则，利用FIR滤波器使用16个采样点
@@ -399,9 +392,9 @@ int WaveProcessor::MakeTargetSamplesData()
 							lval += *(((char *)puchar) - i + 1);	// 本采样的第二个声道
 							lval *= 256;
 							lval /= 2;
-							total += lval * coefficient[i];
+							total += (long)(lval * coefficient[i]);
 						}
-						m_newlyMadeSamples[nNumNewlyMadeSamps] = total;
+						m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)total;
 					}
 					nNumNewlyMadeSamps++;	// 本批欠采样个数计数
 
@@ -457,10 +450,10 @@ int WaveProcessor::MakeTargetSamplesData()
 				// 根据欠采样点下标，。。。
 				iTargetSampG = iTargetSampStartG + nNumNewlyMadeSamps;
 				// 计算其对应的原采样点下标
-				iOriginalSampG = (double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5;
+				iOriginalSampG = (long)((double)iTargetSampG*m_header.sample_rate / m_unifiedSamplingRate + 0.5);
 				if (iOriginalSampG > iOriginalSampStartG + uNumOrigSampsRead - 1) {
 					// 还未读到“目标原采样点”，。。。
-					iOriginalSampStartG += uNumOrigSampsRead;
+					iOriginalSampStartG += (long)uNumOrigSampsRead;
 					break;
 				}
 				// 目标原采样点在缓存中的位置
@@ -482,7 +475,7 @@ int WaveProcessor::MakeTargetSamplesData()
 						}
 						total += lval;
 					}
-					m_newlyMadeSamples[nNumNewlyMadeSamps] = total / (sampleNum + 1);
+					m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)(total / (sampleNum + 1));
 
 				}
 				//否则，利用FIR滤波器使用16个采样点
@@ -497,9 +490,9 @@ int WaveProcessor::MakeTargetSamplesData()
 							lval = *(((char *)puchar) - i);
 							lval *= 256;
 						}
-						total += lval * coefficient[i];
+						total += long(lval * coefficient[i]);
 					}
-					m_newlyMadeSamples[nNumNewlyMadeSamps] = total;
+					m_newlyMadeSamples[nNumNewlyMadeSamps] = (short)total;
 				}
 				nNumNewlyMadeSamps++;	// 本批欠采样个数计数
 

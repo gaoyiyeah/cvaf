@@ -24,7 +24,6 @@ const double freq_bind[] =
 
 void FingerprintExtractor::CreateImage(const string& filepath) {
 	this->_wavepath = filepath;
-	_wp.Clear();
 	_wp.OpenWaveFile(_wavepath.c_str());
 	_wp.MakeTargetSamplesData();
 	unsigned long all_time_data_size = 0;
@@ -40,7 +39,7 @@ void FingerprintExtractor::CalcFingerprint(const string& filepath,
 	energy_start = clock();
 	for (int frame_idx = 0; frame_idx < _frame_number; frame_idx++) {
 		for (size_t i = 0; i < filters.size(); i++) {
-			int sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
+			double sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
 			if (sign > 0)
 				fingers[frame_idx][i] = '1';
 			else
@@ -81,7 +80,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 	memset(_energy, 0, sizeof(double)* QUERY_FINGER_NUM * 33);
 	_frame_number = 0;
 	int start = 0;
-	int jump_samples = (int)(sampleRate * timeInterval); // 5000 means the sample rate.
+	int jump_samples = (int)(sampleRate * TIME_INTERVAL); // 5000 means the sample rate.
 
 	while (start + NumSamplesPerFrameM < all_time_data_size) {
 		short time_data[1850];
@@ -108,7 +107,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 			}
 		}
 		for (int i = 0; i < 33; i++)
-			_energy[_frame_number][i] = (int)bind_energy[i];
+			_energy[_frame_number][i] = bind_energy[i];
 
 		//ÏÂÒ»Ö¡
 		_frame_number++;

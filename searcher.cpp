@@ -12,11 +12,12 @@
 
 using namespace std;
 
-int hit_size = 0;
+int hit_number = 0;
 
 bool comp(pair<unsigned int, MusicInfo> a,
 	pair<unsigned int, MusicInfo> b) {
-	return a.first < b.first;
+	return a.first != b.first ?
+		a.first < b.first : a.second.id < b.second.id;
 }
 
 int Searcher::build_index(string dirPath) {
@@ -37,13 +38,6 @@ int Searcher::build_index(string dirPath) {
 	sort_end = clock();
 	double sort_time = (double)(sort_end - sort_start) / CLOCKS_PER_SEC;
 	cout << "Sort time: " << sort_time << endl;
-	return 0;
-}
-
-int Searcher::_insert_one_item(unsigned int key, MusicInfo& m) {
-	if (key == 0)
-		return 0;
-	index.push_back(make_pair(key, m));
 	return 0;
 }
 
@@ -82,6 +76,13 @@ int Searcher::_build_one_file_index(const string filepath) {
 	return i;
 }
 
+int Searcher::_insert_one_item(unsigned int key, MusicInfo& m) {
+	if (key == 0)
+		return 0;
+	index.push_back(make_pair(key, m));
+	return 0;
+}
+
 int Searcher::search(bitset<32>* finger_block, const int block_size) {
 	std::map<double, int> result_map;
 	//exact match
@@ -104,8 +105,8 @@ int Searcher::search(bitset<32>* finger_block, const int block_size) {
 			if (key == 0)
 				continue;
 			int result = _inner_search(key, finger_block, block_size, i, &result_map);
-				if (result > 0)
-					return result;
+			if (result > 0)
+				return result;
 		}
 	}
 #endif
@@ -148,7 +149,7 @@ int Searcher::search(bitset<32>* finger_block, const int block_size) {
 	}
 #endif
 	if (result_map.size() > 0) {
-		cerr << result_map.begin()->first << endl;
+		//cerr << result_map.begin()->first << endl;
 		return result_map.begin()->second;
 	}
 	else
@@ -177,12 +178,16 @@ int Searcher::_inner_search(unsigned long key, bitset<32>* finger_block,
 	for (long long iter = start; iter <= end; iter++) {
 		double diffbits = compare_bitsets(index[iter].second.id, finger_block,
 			block_size, i, index[iter].second.i_frame);
+		hit_number++;
 		if (diffbits <= BIT_ERROR_RATE) {
-			hit_size++;
+			//cerr << diffbits << endl;
+			return index[iter].second.id;
 			(*result_map)[diffbits] = index[iter].second.id;
+			/*
 			if (diffbits <= MUST_RIGHT) {
 				return index[iter].second.id;
 			}
+			*/
 		}
 	}
 	return -1;

@@ -30,9 +30,7 @@ class WaveProcessor {
 private:
 	waveheader_t m_header;	// 基本文件头
 	unsigned int m_unifiedSamplingRate;	// 统一采样率（也即欠采样后的采样率）
-	//short* m_newlyMadeSamples;
 	short m_newlyMadeSamples[(sizeof(short)+4) * BUFFER_SIZE_IN_SAMPLES_DS]; // 4 is m_header.byte_p_sample in WaveProcessor.cpp 194
-	//std::vector<short> samplesVector;
 	unsigned long m_newlyMadeSamplesNumber;
 	double coefficient[16];
 	FILE *m_pfWaveR;
