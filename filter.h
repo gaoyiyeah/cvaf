@@ -14,10 +14,11 @@ public:
 	int band_end;
 	double threshold;
 	double confidence;
+	double error_rate;
 
 	Filter(){}
 	Filter(int id) : id(id){}
-	// Must insure that start_row + 82 is smaller than the total rows of image.
-	// The image size is alwayls 82 * 33.
+	// Must insure that start_row + FRAME_LENGTH is smaller than the total rows of image.
+	// The image size is alwayls FRAME_LENGTH * 33.
 	double GetEnergy(double image[][33], int start_row = 0);
 };

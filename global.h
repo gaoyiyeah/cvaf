@@ -16,18 +16,20 @@ public:
 
 typedef std::vector<std::pair<unsigned int, MusicInfo>> IndexType;
 
+const int FRAME_LENGTH = 21;
 const int DATABASE_SIZE = 174000;
 const double TIME_INTERVAL = 0.0116;
-const double BIT_ERROR_RATE = 0.1;
+const double BIT_ERROR_RATE = 0.5;
 const double MUST_RIGHT = 0.1;
-const int THREAD_NUM = 1;
+const int THREAD_NUM = 10;
 const int OUTPUT_THREAD = 10;
 const int SUB_FINGER_NUM = 380000; // 380000, there are 186056 subfingerprints in 90408 with 23.2
-// Hop 11.6ms: 327 for 5 seconds, 765 for 10 seconds.
+// Hop 11.6ms, 82 frames: 327 for 5 seconds, 765 for 10 seconds.
+// Hop 11.6ms, 41 frames: 804 for 10 seconds.
 const int QUERY_FINGER_NUM = 765;
 
-const std::string WAVE_ROOTPATH = "E:\\yangguang\\cvaf\\data\\tmp";
-const std::string FINGER_ROOTPATH = "E:\\yangguang\\cvaf\\data\\fingers";
-const std::string QUERY_WAVE_PATH = "E:\\yangguang\\cvaf\\data\\query\\white_noise";
+const std::string WAVE_ROOTPATH = "Z:\\200000_s48_24000hz_wav\\1";
+const std::string FINGER_ROOTPATH = "E:\\yangguang\\cvaf\\data\\fingers21";
+const std::string QUERY_WAVE_PATH = "E:\\yangguang\\cvaf\\data\\query\\32kbps\\small";
 const std::string INDEX_FILE_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.index";
 const std::string WHOLE_FINGER_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.finger";

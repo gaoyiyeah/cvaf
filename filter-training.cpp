@@ -2,12 +2,15 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <vector>
 #include "filter-training.h"
 #include "fingerprint-extractor.h"
 #include "util.h"
 
 using namespace std;
+
+vector<SamplePair> FilterTraining::_sample_pairs;
 
 vector<Filter> FilterTraining::Training(const string& original_wave_path,
 	const string& degraded_wave_path) {
@@ -17,6 +20,38 @@ vector<Filter> FilterTraining::Training(const string& original_wave_path,
 	_CalculateThreshold();
 	_Training();
 	return _selected_filters;
+}
+
+void FilterTraining::TestClassifier(const string& original_wave_path,
+	const string& degraded_wave_path, const vector<Filter>& filters) {
+	_PrepareSamples(original_wave_path, degraded_wave_path);
+	int total_yes = 0;
+	int positive_yes = 0;
+	int negative_yes = 0;
+	for (auto sample : _sample_pairs) {
+		double result = 0;
+		for (auto filter : filters) {
+			bool sign1 = filter.GetEnergy(sample.sample1.image) - filter.threshold > 0 ? true : false;
+			bool sign2 = filter.GetEnergy(sample.sample2.image) - filter.threshold > 0 ? true : false;
+			bool re = !(sign1 ^ sign2);
+			if (re)
+				result += filter.confidence;
+			else
+				result -= filter.confidence;
+		}
+		bool classification = result > 0 ? true : false;
+		if (classification == sample.label) {
+			total_yes++;
+			if (sample.label == true)
+				positive_yes++;
+			else
+				negative_yes++;
+		}
+	}
+	cout << "Total classification rate: " << (double)total_yes / _sample_pairs.size() << endl;
+	cout << "Positive classification rate: " << (double)2.0 * positive_yes / _sample_pairs.size() << endl;
+	cout << "Negative classification rate: " << (double)2.0 * negative_yes / _sample_pairs.size() << endl;
+	return;
 }
 
 void FilterTraining::PringFiltersToFile(const string& filepath) {
@@ -37,7 +72,10 @@ vector<Filter> FilterTraining::LoadFilters(const string& filepath) {
 
 // 5 kinds of filters, totally 26301 filters.
 void FilterTraining::_GenerateFilter() {
-	std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 57, 82 }; // time from 1 frame to 82 frame in exponential steps of 1.5
+	// time from 1 frame to FRAME_LENGTH frame in exponential steps of 1.5
+	//std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 57, 82};
+	//std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 41};
+	vector<int> time_range = { 1, 2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 };
 	int id = 0;
 	// Generate filters of type 1. Totally 5808 filters.
 	for (int time_end = 0; time_end < time_range.size(); time_end++) {
@@ -108,23 +146,21 @@ void FilterTraining::_GenerateFilter() {
 			}
 		}
 	}
+	cout << "Filters: " << _filters.size() << endl;
 }
 
-void FilterTraining::_PrepareSamples(const string& original_wave_path,
-	const string& degraded_wave_path) {
-	vector<string> original_files;
-	original_files = Util::load_dir(original_wave_path, "wav");
-	
-	for (const auto file : original_files) {
+void FilterTraining::_PreparePositiveSamples(const vector<string>& degraded_files,
+	const string& original_wavepath) {
+	for (const auto file : degraded_files) {
 		cout << file << endl;
 		vector<Sample> original_samples, degraded_samples;
 
-		FingerprintExtractor image_analyzer;
-		image_analyzer.CreateImage(file);
-		image_analyzer.GetSamples(&original_samples);
+		FingerprintExtractor extractor;
+		extractor.CreateImage(file);
+		extractor.GetSamples(&degraded_samples);
 		string filename = file.substr(file.find_last_of("\\") + 1, file.size());
-		image_analyzer.CreateImage(degraded_wave_path + "\\" + filename);
-		image_analyzer.GetSamples(&degraded_samples);
+		extractor.CreateImage(original_wavepath + "\\" + filename);
+		extractor.GetSamples(&original_samples);
 
 		// Add positive samples.
 		for (size_t i = 0; i < original_samples.size(); i++) {
@@ -135,6 +171,22 @@ void FilterTraining::_PrepareSamples(const string& original_wave_path,
 			_sample_pairs.push_back(pair);
 		}
 	}
+}
+
+void FilterTraining::_PrepareSamples(const string& original_wavepath,
+	const string& degraded_wavepath) {
+	_sample_pairs.clear();
+	vector<string> all_degraded_files;
+	all_degraded_files = Util::load_dir(degraded_wavepath, "wav");
+	
+	vector<thread> threads;
+	vector<vector<string>> degraded_files(THREAD_NUM);
+	for (int i = 0; i < all_degraded_files.size(); i++)
+		degraded_files[i%THREAD_NUM].push_back(all_degraded_files[i]);
+	for (int i = 0; i < THREAD_NUM; i++)
+		threads.push_back(thread(_PreparePositiveSamples, degraded_files[i], original_wavepath));
+	for (int i = 0; i < THREAD_NUM; i++)
+		threads[i].join();
 
 	// Add negative samples.
 	srand((unsigned)time(NULL));
@@ -152,7 +204,7 @@ void FilterTraining::_PrepareSamples(const string& original_wave_path,
 			neg_num++;
 		}
 	}
-	cerr << "Totally generate " << _sample_pairs.size() << " samples." << endl;
+	cout << "Totally generate " << _sample_pairs.size() << " samples." << endl;
 	return;
 }
 
@@ -171,7 +223,7 @@ void FilterTraining::_PreComputeEnergy() {
 		}
 	}
 	end = clock();
-	cerr << "Pre compute takes " << (end - start) / CLOCKS_PER_SEC << "s." << endl;
+	cout << "Pre compute takes " << (end - start) / CLOCKS_PER_SEC << "s." << endl;
 }
 
 void FilterTraining::_CalculateThreshold() {
@@ -191,7 +243,7 @@ void FilterTraining::_CalculateThreshold() {
 		else
 			_filters[i].threshold = (response[size / 2 - 1] + response[size / 2]) / 2;
 	}
-	cerr << "Generate thresholds done!" << endl;
+	cout << "Generate thresholds done!" << endl;
 	return;
 }
 
@@ -226,21 +278,23 @@ void FilterTraining::_Training() {
 		}
 		_selected_filters.push_back(_filters[selected_filter]);
 		selected_filters_idx.push_back(selected_filter);
-		cerr << "Select filter: " << selected_filter << endl;
+		cout << "Select filter: " << selected_filter << endl;
 		// 2. Calculate weight error.
 		double weight_error = 0;
-		Filter& filter = _filters[selected_filter];
+		int wrong_sample = 0;
+		Filter& filter = _selected_filters[number];
 		vector<size_t> error_samples;
 		for (size_t i = 0; i < _sample_pairs.size(); i++) {
 			bool sign1 = (_energy[selected_filter][i].energy1 - filter.threshold) > 0 ? true : false;
 			bool sign2 = (_energy[selected_filter][i].energy2 - filter.threshold) > 0 ? true : false;
 			bool re = !(sign1 ^ sign2);
 			if (re != _sample_pairs[i].label) {
+				wrong_sample++;
 				weight_error += _sample_pairs[i].weight;
 				error_samples.push_back(i);
 			}
 		}
-
+		filter.error_rate = (double)wrong_sample / _sample_pairs.size();
 		// 3. Assign confidence to hm.
 		double confidence = log((1 - weight_error) / weight_error);
 		filter.confidence = confidence;
@@ -270,4 +324,37 @@ void FilterTraining::_Training() {
 		//cerr << "Round " << number << " done. Using: " << (end - start) / CLOCKS_PER_SEC << "s." << endl;
 	}
 	return;
+}
+
+void FilterTraining::GetDistribution() {
+	vector<Filter> filters = this->LoadFilters("E:\\yangguang\\cvaf\\data\\filters.dat");
+	string original_wav = "E:\\yangguang\\cvaf\\data\\training\\original_wav";
+	string degraded_wav = "E:\\yangguang\\cvaf\\data\\training\\degraded_wav";
+	string output_path = "E:\\yangguang\\cvaf\\data\\filter-distribution\\";
+	this->_PrepareSamples(original_wav, degraded_wav);
+	for (size_t i = 0; i < filters.size(); i++) {
+		vector<double> response;
+		for (size_t j = 0; j < _sample_pairs.size(); j++) {
+			if (_sample_pairs[j].label == false)
+				break;
+			response.push_back(filters[i].GetEnergy(_sample_pairs[j].sample1.image));
+			response.push_back(filters[i].GetEnergy(_sample_pairs[j].sample2.image));
+		}
+		sort(response.begin(), response.end());
+		int size = response.size();
+		double gap = (response[size - 1] - response[0]) / 99;
+		vector<pair<double, int>> distribution(100);
+		for (size_t j = 0; j < 100; j++)
+			distribution[j].first = response[0] + gap * j;
+		for (size_t j = 0; j < response.size(); j++) {
+			distribution[(response[j] - response[0]) / gap].second++;
+		}
+		string file_path = output_path + to_string(filters[i].id) + ".txt";
+		fstream fout;
+		fout.open(file_path, fstream::out);
+		for (auto dis : distribution)
+			fout << dis.first << "\t" << (double)dis.second / response.size() << endl;
+		fout.close();
+		cerr << "Distribution: " << i << " done!" << endl;
+	}
 }

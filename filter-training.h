@@ -3,12 +3,13 @@
 #include <string>
 #include <vector>
 #include "filter.h"
+#include "global.h"
 
 class Sample {
 public:
 	int song_id;
 	int frame_id;
-	double image[82][33];
+	double image[FRAME_LENGTH][33];
 
 	Sample(){};
 	Sample(int s_id, int f_id) : song_id(s_id), frame_id(f_id) {}
@@ -34,15 +35,20 @@ public:
 		const std::string& degraded_wave_path);
 	void PringFiltersToFile(const std::string& filepath);
 	std::vector<Filter> LoadFilters(const std::string& filepath);
+	void GetDistribution();
+	void TestClassifier(const std::string& original_wave_path,
+		const std::string& degraded_wave_path, const std::vector<Filter>& filters);
 private:
 	void _GenerateFilter();
-	void _PrepareSamples(const std::string& original_wave_path,
-		const std::string& degraded_wave_path);
+	void _PrepareSamples(const std::string& original_wavepath,
+		const std::string& degraded_wavepath);
+	static void _PreparePositiveSamples(const std::vector<std::string>& filenames,
+		const std::string& original_wavepath);
 	void _CalculateThreshold();
 	void _PreComputeEnergy();
 	void _Training();
 
-	std::vector<SamplePair> _sample_pairs;
+	static std::vector<SamplePair> _sample_pairs;
 	std::vector<Filter> _filters;
 	std::vector<Filter> _selected_filters;
 	std::vector<int> _thresholds; // Thresholds for filters.

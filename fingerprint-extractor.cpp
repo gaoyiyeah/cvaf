@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 #include "filter-training.h"
-#include "global.h"
 #include "fingerprint-extractor.h"
+#include "global.h"
 #include "util.h"
 
 using namespace std;
@@ -54,10 +54,10 @@ void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	samples->clear();
 	int frame_idx = 0;
 	// Get a sample every 100 frames.
-	for (int start_pos = 0; start_pos < _frame_number; start_pos += 1000) {
+	for (int start_pos = 0; start_pos < _frame_number; start_pos += 100) {
 		int song_id = this->GetFileId();
 		Sample sample(song_id, frame_idx++);
-		for (int i = 0; i < 82; i++) {
+		for (int i = 0; i < FRAME_LENGTH; i++) {
 			for (int j = 0; j < 33; j++) {
 				sample.image[i][j] = _energy[i + start_pos][j];
 			}
@@ -113,7 +113,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 		_frame_number++;
 		start += jump_samples;
 	}
-	_frame_number -= 82;
+	_frame_number -= FRAME_LENGTH;
 	return _frame_number;
 }
 
