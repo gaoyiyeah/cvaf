@@ -46,7 +46,7 @@ void SearchOneFile(vector<string>& allQueryFiles) {
 		int queryId = extractor.GetFileId();
 		cout << queryId << endl;
 		extractor.getQueryFinger(finger_block, size);		
-		int result = searcher.search(queryId, finger_block, size);
+		int result = searcher.Search(queryId, finger_block, size);
 		if (result == -1) {
 			//cout<<"file: "<<queryId<<" Not found"<<endl;
 			not_found++;
@@ -109,7 +109,9 @@ int main() {
 	getchar();
 	*/
 	start = clock();
-	searcher.build_index(FINGER_ROOTPATH);
+	searcher.BuildIndex(FINGER_ROOTPATH);
+	searcher.DoStatistics();
+	getchar();
 	//searcher.OutputIndexToFile(INDEX_FILE_PATH);
 	//searcher.OutputFingerToFile(WHOLE_FINGER_PATH);
 	//searcher.LoadIndex(INDEX_FILE_PATH);

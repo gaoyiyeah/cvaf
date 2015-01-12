@@ -23,7 +23,7 @@ bool comp(pair<unsigned int, MusicInfo> a,
 		a.first < b.first : a.second.id < b.second.id;
 }
 
-int Searcher::build_index(string dirPath) {
+int Searcher::BuildIndex(string dirPath) {
 	finger_database.clear();
 	finger_database.resize(DATABASE_SIZE);
 	time_t sort_start, sort_end;
@@ -86,7 +86,7 @@ int Searcher::_insert_one_item(unsigned int key, MusicInfo& m) {
 	return 0;
 }
 
-int Searcher::search(int queryId, bitset<32>* finger_block, const int block_size) {
+int Searcher::Search(int queryId, bitset<32>* finger_block, const int block_size) {
 	std::map<double, int> result_map;
 	//exact match
 	//从查询指纹块的第一条指纹开始
@@ -107,7 +107,7 @@ int Searcher::search(int queryId, bitset<32>* finger_block, const int block_size
 			unsigned long key = item.to_ulong();
 			if (key == 0)
 				continue;
-			int result = _inner_search(key, finger_block, block_size, i, &result_map);
+			int result = _inner_search(queryId, key, finger_block, block_size, i, &result_map);
 			if (result > 0)
 				return result;
 		}
@@ -124,7 +124,7 @@ int Searcher::search(int queryId, bitset<32>* finger_block, const int block_size
 				unsigned long key = item.to_ulong();
 				if (key == 0)
 					continue;
-				_inner_search(key, finger_block, block_size, i, &result_map);
+				_inner_search(queryId, key, finger_block, block_size, i, &result_map);
 
 			}
 		}
@@ -151,6 +151,7 @@ int Searcher::search(int queryId, bitset<32>* finger_block, const int block_size
 		}
 	}
 #endif
+	hit_number += result_map.size();
 	if (result_map.size() > 0) {
 		//cerr << result_map.begin()->first << endl;
 		return result_map.begin()->second;
@@ -181,14 +182,15 @@ int Searcher::_inner_search(int queryId, unsigned long key, bitset<32>* finger_b
 	search_end = clock();
 	//duration_search += (double)(search_end - search_start) / CLOCKS_PER_SEC;
 	for (long long iter = start; iter <= end; iter++) {
+		/*
 		if (index[iter].second.id == queryId) {
 			list_contain_id++;
 			break;
 		}
-
+		*/
 		double diffbits = compare_bitsets(index[iter].second.id, finger_block,
 			block_size, i, index[iter].second.i_frame);
-		hit_number++;
+		//hit_number++;
 		if (diffbits <= BIT_ERROR_RATE) {
 			//cerr << diffbits << endl;
 			//return index[iter].second.id;
@@ -349,4 +351,38 @@ int Searcher::Clear() {
 	index.clear();
 	finger_database.clear();
 	return 0;
+}
+
+void Searcher::DoStatistics() {
+	int number = 1;
+	int distinct_key = 1;
+	vector<int> distribution(21, 0);
+	for (int i = 1; i < index.size(); i++) {
+		if (index[i].first != index[i - 1].first) {
+			if (number < 20)
+				distribution[number]++;
+			else
+				distribution[20]++;
+			distinct_key++;
+			number = 1;
+		} else {
+			number++;
+		}
+	}
+	cout << "Total keys: " << index.size() << endl;
+	cout << "Distinct keys: " << distinct_key << endl;
+	for (int i = 1; i < distribution.size(); i++)
+		cout << "Key numbers for value list length " << i << ": "
+		<< (double)distribution[i] / distinct_key * 100 << "%" << endl;
+	cout << "Average length: " << (double)index.size() / distinct_key << endl;
+
+	vector<int> bits(32, 0);
+	for (int i = 0; i < index.size(); i++) {
+		for (int j = 0; j < 32; j++) {
+			if ((index[i].first >> j) & 1)
+				bits[j]++;
+		}
+	}
+	for (int i = 0; i < 32; i++)
+		cout << "1 in bit " << i << ": " << (double)bits[i] / index.size() * 100 << "%" << endl;
 }
