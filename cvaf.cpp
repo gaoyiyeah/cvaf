@@ -45,7 +45,7 @@ void SearchOneFile(vector<string>& allQueryFiles) {
 		int size = 0;
 		int queryId = extractor.GetFileId();
 		cout << queryId << endl;
-		extractor.getQueryFinger(finger_block, size);		
+		extractor.GetQueryFinger(finger_block, size);		
 		int result = searcher.Search(queryId, finger_block, size);
 		if (result == -1) {
 			//cout<<"file: "<<queryId<<" Not found"<<endl;
@@ -123,7 +123,7 @@ int main() {
 	not_found = 0;
 	start = clock();
 	vector<vector<string>> query_files(THREAD_NUM);
-	Util::load_dir_specific(query_files, QUERY_WAVE_PATH, "wav");
+	Util::LoadDirSpecific(query_files, QUERY_WAVE_PATH, "wav");
 	for (int i = 0; i < THREAD_NUM; i++)
 		threads.push_back(thread(SearchOneFile, query_files[i]));
 	for (int i = 0; i < THREAD_NUM; i++)

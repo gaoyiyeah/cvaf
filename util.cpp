@@ -18,7 +18,7 @@ char buffer[SIZE];
 std::vector<std::string> Util::allFiles;
 std::vector<std::vector<std::bitset<32>>> Util::finger_database;
 
-int Util::load_one_file(string filepath, vector<unsigned int>& audio_fingers) {
+int Util::LoadOneFile(string filepath, vector<unsigned int>& audio_fingers) {
 	FILE* fp = fopen(filepath.c_str(), "r");
 	if (fp == NULL)	{
 		std::cout << "no such file: " << filepath << std::endl;
@@ -40,7 +40,7 @@ int Util::load_one_file(string filepath, vector<unsigned int>& audio_fingers) {
 	return 0;
 }
 
-std::vector<std::string> Util::load_dir(std::string dirpath, std::string type) {
+std::vector<std::string> Util::LoadDir(std::string dirpath, std::string type) {
 	allFiles.clear();
 	std::string temppath = dirpath + "\\*." + type;
 	struct _finddata_t fileinfo;
@@ -56,7 +56,7 @@ std::vector<std::string> Util::load_dir(std::string dirpath, std::string type) {
 	return allFiles;
 }
 
-void Util::load_dir_specific(std::vector<std::vector<std::string>>& allQueryFiles,
+void Util::LoadDirSpecific(std::vector<std::vector<std::string>>& allQueryFiles,
 	std::string dirpath, std::string type) {
 	std::string temppath = dirpath + "\\*." + type;
 	struct _finddata_t fileinfo;
@@ -81,7 +81,7 @@ void Util::load_dir_specific(std::vector<std::vector<std::string>>& allQueryFile
 	return;
 }
 
-int Util::_loadFingerFromOneFile(string filepath_prefix, unsigned int fileNum) {
+int Util::_LoadFingerFromOneFile(string filepath_prefix, unsigned int fileNum) {
 	ifstream fin(filepath_prefix + to_string(fileNum), ios::in | ifstream::binary);
 	int databaseSize = 0;
 	fin.read(reinterpret_cast<char *>(&databaseSize), sizeof(databaseSize));
@@ -107,7 +107,7 @@ int Util::LoadFingerDatabase(string filepath_prefix) {
 	finger_database.resize(DATABASE_SIZE);
 	vector<thread> threads(OUTPUT_THREAD);
 	for (int i = 0; i < OUTPUT_THREAD; i++) {
-		threads[i] = thread(&Util::_loadFingerFromOneFile, filepath_prefix, i);
+		threads[i] = thread(&Util::_LoadFingerFromOneFile, filepath_prefix, i);
 	}
 
 	for (int i = 0; i < OUTPUT_THREAD; i++) {
@@ -116,7 +116,7 @@ int Util::LoadFingerDatabase(string filepath_prefix) {
 	return 0;
 }
 
-int Util::_outputFingerToOneFile(string filepath_prefix, unsigned int fileNum) {
+int Util::_OutputFingerToOneFile(string filepath_prefix, unsigned int fileNum) {
 	ofstream fout(filepath_prefix + to_string(fileNum), ios::out | ofstream::binary);
 	unsigned int databaseSize = (unsigned int)finger_database.size();
 	fout.write(reinterpret_cast<char *>(&databaseSize), sizeof(unsigned int));
@@ -141,7 +141,7 @@ int Util::OutputFingerToFile(string filepath_prefix) {
 	vector<thread> threads(OUTPUT_THREAD);
 
 	for (int i = 0; i < OUTPUT_THREAD; i++)	{
-		threads[i] = thread(&Util::_outputFingerToOneFile, filepath_prefix, i);
+		threads[i] = thread(&Util::_OutputFingerToOneFile, filepath_prefix, i);
 	}
 
 	for (int i = 0; i < OUTPUT_THREAD; i++)	{

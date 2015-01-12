@@ -21,7 +21,7 @@ public:
 	void GetSamples(std::vector<Sample>* samples);
 	void CalcFingerprint(const std::string& filepath,
 		std::vector<Filter>& filters);
-	void getQueryFinger(bitset<32>* new_finger, int& size);
+	void GetQueryFinger(bitset<32>* new_finger, int& size);
 	void PrintFingerToFile(const std::string& filepath);
 	int GetFrameNumber();
 	int GetFileId();
@@ -36,5 +36,5 @@ private:
 	short _all_time_data[SamplesVectorSize];
 	// energy[n,m] indicates the energy in nth frame and mth frequency band.
 	double _energy[SUB_FINGER_NUM][33];
-	char fingers[SUB_FINGER_NUM][32]; // final fingerprint
+	char _fingers[SUB_FINGER_NUM][32]; // final fingerprint
 };

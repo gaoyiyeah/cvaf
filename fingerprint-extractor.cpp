@@ -41,9 +41,9 @@ void FingerprintExtractor::CalcFingerprint(const string& filepath,
 		for (size_t i = 0; i < filters.size(); i++) {
 			double sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
 			if (sign > 0)
-				fingers[frame_idx][i] = '1';
+				_fingers[frame_idx][i] = '1';
 			else
-				fingers[frame_idx][i] = '0';
+				_fingers[frame_idx][i] = '0';
 		}
 	}
 	energy_end = clock();
@@ -67,10 +67,10 @@ void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	return ;
 }
 
-void FingerprintExtractor::getQueryFinger(bitset<32>* new_finger, int& size) {
+void FingerprintExtractor::GetQueryFinger(bitset<32>* new_finger, int& size) {
 	size = _frame_number;
 	for (int i = 0; i < _frame_number; i++) {
-		bitset<32> item(fingers[i]);
+		bitset<32> item(_fingers[i]);
 		new_finger[i] = item;
 	}
 	return;
@@ -148,7 +148,7 @@ void FingerprintExtractor::PrintFingerToFile(const string& fingerFile) {
 	for (int i = 0; i < _frame_number; i++) {
 		sub_finger = "";
 		for (int j = 0; j < 32; j++)
-			sub_finger.push_back(fingers[i][j]);
+			sub_finger.push_back(_fingers[i][j]);
 		bitset<32> b(sub_finger);
 		fprintf(fp, "%lu\n", b.to_ulong());
 	}

@@ -13,7 +13,6 @@ public:
 	MusicInfo(int ID, int FID) :id(ID), i_frame(FID){};
 	MusicInfo(){};
 };
-
 typedef std::vector<std::pair<unsigned int, MusicInfo>> IndexType;
 
 const int FRAME_LENGTH = 21;
@@ -30,7 +29,7 @@ const int SUB_FINGER_NUM = 380000; // 380000, there are 186056 subfingerprints i
 const int QUERY_FINGER_NUM = 828;
 
 const std::string WAVE_ROOTPATH = "E:\\yangguang\\cvaf\\data\\tmp";
-const std::string FINGER_ROOTPATH = "E:\\yangguang\\cvaf\\data\\fingers";
+const std::string FINGER_ROOTPATH = "E:\\yangguang\\cvaf\\data\\fingers21";
 const std::string QUERY_WAVE_PATH = "E:\\yangguang\\cvaf\\data\\query\\32kbps\\small";
 const std::string INDEX_FILE_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.index";
 const std::string WHOLE_FINGER_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.finger";

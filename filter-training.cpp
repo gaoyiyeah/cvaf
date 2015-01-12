@@ -177,7 +177,7 @@ void FilterTraining::_PrepareSamples(const string& original_wavepath,
 	const string& degraded_wavepath) {
 	_sample_pairs.clear();
 	vector<string> all_degraded_files;
-	all_degraded_files = Util::load_dir(degraded_wavepath, "wav");
+	all_degraded_files = Util::LoadDir(degraded_wavepath, "wav");
 	
 	vector<thread> threads;
 	vector<vector<string>> degraded_files(THREAD_NUM);
