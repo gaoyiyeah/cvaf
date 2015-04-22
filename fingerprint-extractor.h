@@ -35,6 +35,6 @@ private:
 	int _frame_number; // The total number of frames in the wave file.
 	short _all_time_data[SamplesVectorSize];
 	// energy[n,m] indicates the energy in nth frame and mth frequency band.
-	double _energy[SUB_FINGER_NUM][33];
+	double _energy[SUB_FINGER_NUM][BINDS_NUM];
 	char _fingers[SUB_FINGER_NUM][32]; // final fingerprint
 };

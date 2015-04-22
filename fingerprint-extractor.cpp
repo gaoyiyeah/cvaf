@@ -13,6 +13,8 @@ using namespace std;
 double duration_get_energy = 0;
 time_t energy_start, energy_end;
 
+/*
+const int BINDS_NUM = 33;
 const double freq_bind[] =
 { 300.000, 317.752, 336.554, 356.469, 377.563,
 399.904, 423.568, 448.632, 475.178, 503.296,
@@ -21,6 +23,19 @@ const double freq_bind[] =
 947.240, 1003.29, 1062.66, 1125.54, 1192.14,
 1262.68, 1337.40, 1416.54, 1500.36, 1589.14,
 1683.17, 1782.77, 1888.27, 2000.00 }; // Bands in [0, 33]
+*/
+
+// 32 bands.
+const double freq_bind[] =
+{
+	300.000, 318.323, 337.766, 358.396, 380.286,
+	403.513, 428.158, 454.309, 482.057, 511.500,
+	542.741, 575.890, 611.064, 648.387, 687.989,
+	730.009, 774.597, 821.907, 872.107, 925.374,
+	981.893, 1041.86, 1105.50, 1173.02, 1244.67, 
+	1320.69, 1401.35, 1486.94, 1577.76, 1674.13,
+	1776.38, 1884.88, 2000.00
+};
 
 void FingerprintExtractor::CreateImage(const string& filepath) {
 	this->_wavepath = filepath;
@@ -53,12 +68,12 @@ void FingerprintExtractor::CalcFingerprint(const string& filepath,
 void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	samples->clear();
 	int frame_idx = 0;
-	// Get a sample every 100 frames.
+	// Get a sample every 10 frames.
 	for (int start_pos = 0; start_pos < _frame_number; start_pos += 100) {
 		int song_id = this->GetFileId();
 		Sample sample(song_id, frame_idx++);
 		for (int i = 0; i < FRAME_LENGTH; i++) {
-			for (int j = 0; j < 33; j++) {
+			for (int j = 0; j < BINDS_NUM; j++) {
 				sample.image[i][j] = _energy[i + start_pos][j];
 			}
 		}
@@ -77,7 +92,7 @@ void FingerprintExtractor::GetQueryFinger(bitset<32>* new_finger, int& size) {
 }
 
 int FingerprintExtractor::_Energying(long all_time_data_size) {
-	memset(_energy, 0, sizeof(double)* QUERY_FINGER_NUM * 33);
+	memset(_energy, 0, sizeof(double)* QUERY_FINGER_NUM * BINDS_NUM);
 	_frame_number = 0;
 	int start = 0;
 	int jump_samples = (int)(sampleRate * TIME_INTERVAL); // 5000 means the sample rate.
@@ -85,8 +100,8 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 	while (start + NumSamplesPerFrameM < all_time_data_size) {
 		short time_data[1850];
 		cpxv_t freq_data[2048];
-		double bind_energy[33];
-		memset(bind_energy, 0, sizeof(double)* 33);
+		double bind_energy[BINDS_NUM];
+		memset(bind_energy, 0, sizeof(double)* BINDS_NUM);
 		for (int i = 0; i < NumSamplesPerFrameM; i++) {
 			time_data[i] = _all_time_data[i + start];
 		}
@@ -103,11 +118,11 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 				continue;
 			} else {
 				int bind = _SelectBind(point_freq); // [0,32]
-				bind_energy[bind] += sqrt((freq_data[j].re * freq_data[j].re + freq_data[j].im * freq_data[j].im));
+				bind_energy[bind] += (freq_data[j].re * freq_data[j].re + freq_data[j].im * freq_data[j].im);
 			}
 		}
-		for (int i = 0; i < 33; i++)
-			_energy[_frame_number][i] = bind_energy[i];
+		for (int i = 0; i < BINDS_NUM; i++)
+			_energy[_frame_number][i] = log(bind_energy[i] + 1);
 
 		//ÏÂÒ»Ö¡
 		_frame_number++;
@@ -119,10 +134,9 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 
 int FingerprintExtractor::_SelectBind(double point_freq) {
 	int start = 0;
-	int end = 33;
-	int mid = 0;
+	int end = BINDS_NUM;
 	while (start <= end) {
-		mid = (end + start) / 2;
+		int mid = start + (end - start) / 2;
 		if (point_freq < freq_bind[mid])
 			end = mid - 1;
 		else if (point_freq > freq_bind[mid + 1])

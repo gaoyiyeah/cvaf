@@ -4,7 +4,7 @@
 
 using namespace std;
 
-double Filter::GetEnergy(double image[][33], int start_row) {
+double Filter::GetEnergy(double image[][BINDS_NUM], int start_row) {
 	double energy_black = 0, energy_white = 0;
 	if (type == 1) {
 		int band_mid = (band_start + band_end) / 2;

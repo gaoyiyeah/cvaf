@@ -9,7 +9,7 @@ class Sample {
 public:
 	int song_id;
 	int frame_id;
-	double image[FRAME_LENGTH][33];
+	double image[FRAME_LENGTH][BINDS_NUM];
 
 	Sample(){};
 	Sample(int s_id, int f_id) : song_id(s_id), frame_id(f_id) {}
@@ -31,11 +31,11 @@ public:
 
 class FilterTraining {
 public:
+	std::vector<Filter> LoadFilters(const std::string& filepath);
 	std::vector<Filter> Training(const std::string& original_wave_path,
 		const std::string& degraded_wave_path);
-	void PringFiltersToFile(const std::string& filepath);
-	std::vector<Filter> LoadFilters(const std::string& filepath);
 	void GetDistribution();
+	void PringFiltersToFile(const std::string& filepath);
 	void TestClassifier(const std::string& original_wave_path,
 		const std::string& degraded_wave_path, const std::vector<Filter>& filters);
 private:

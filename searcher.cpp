@@ -124,8 +124,9 @@ int Searcher::Search(int queryId, bitset<32>* finger_block, const int block_size
 				unsigned long key = item.to_ulong();
 				if (key == 0)
 					continue;
-				_InnerSearch(queryId, key, finger_block, block_size, i, &result_map);
-
+				int result = _InnerSearch(queryId, key, finger_block, block_size, i, &result_map);
+				if(result > 0)
+					return result;
 			}
 		}
 	}
@@ -151,6 +152,7 @@ int Searcher::Search(int queryId, bitset<32>* finger_block, const int block_size
 		}
 	}
 #endif
+	return -1;
 	hit_number += result_map.size();
 	if (result_map.size() > 0) {
 		//cerr << result_map.begin()->first << endl;
@@ -182,18 +184,11 @@ int Searcher::_InnerSearch(int queryId, unsigned long key, bitset<32>* finger_bl
 	search_end = clock();
 	//duration_search += (double)(search_end - search_start) / CLOCKS_PER_SEC;
 	for (long long iter = start; iter <= end; iter++) {
-		/*
-		if (index[iter].second.id == queryId) {
-			list_contain_id++;
-			break;
-		}
-		*/
 		double diffbits = _CompareBitsets(_index[iter].second.id, finger_block,
 			block_size, i, _index[iter].second.i_frame);
-		//hit_number++;
 		if (diffbits <= BIT_ERROR_RATE) {
 			//cerr << diffbits << endl;
-			//return index[iter].second.id;
+			return _index[iter].second.id;
 			(*result_map)[diffbits] = _index[iter].second.id;
 			/*
 			if (diffbits <= MUST_RIGHT) {

@@ -19,6 +19,6 @@ public:
 	Filter(){}
 	Filter(int id) : id(id){}
 	// Must insure that start_row + FRAME_LENGTH is smaller than the total rows of image.
-	// The image size is alwayls FRAME_LENGTH * 33.
-	double GetEnergy(double image[][33], int start_row = 0);
+	// The image size is alwayls FRAME_LENGTH * BINDS_NUM.
+	double GetEnergy(double image[][BINDS_NUM], int start_row = 0);
 };

@@ -12,9 +12,6 @@
 
 using namespace std;
 
-static const int SIZE = 400000 * 33 + 1;
-char buffer[SIZE];
-
 std::vector<std::string> Util::allFiles;
 std::vector<std::vector<std::bitset<32>>> Util::finger_database;
 

@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <thread>
 #include <vector>
 #include "filter-training.h"
@@ -55,9 +57,17 @@ void FilterTraining::TestClassifier(const string& original_wave_path,
 }
 
 void FilterTraining::PringFiltersToFile(const string& filepath) {
-	ofstream fout(filepath, ios::out | ofstream::binary);
+	ofstream fout(filepath + "filters.dat", ios::out | ofstream::binary);
 	fout.write(reinterpret_cast<char *>(&_selected_filters[0]),
 		32 * sizeof(_selected_filters[0]));
+	fout.close();
+
+	fout.open(filepath + "filters.txt", ios::out);
+	fout << "Type\tTime end\tBand start\tBand end\tError rate" << endl;
+	for (const auto& f : _selected_filters)
+		fout << f.id << "\t\t" << f.type << "\t\t" << f.time_end << "\t\t"
+		<< f.band_start << "\t\t" << f.band_end << "\t\t" << f.error_rate
+		<< endl;
 	fout.close();
 	return;
 }
@@ -73,14 +83,14 @@ vector<Filter> FilterTraining::LoadFilters(const string& filepath) {
 // 5 kinds of filters, totally 26301 filters.
 void FilterTraining::_GenerateFilter() {
 	// time from 1 frame to FRAME_LENGTH frame in exponential steps of 1.5
-	//std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 57, 82};
+	std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 57, 82};
 	//std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 41};
-	vector<int> time_range = { 1, 2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 };
+	//vector<int> time_range = { 1, 2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 };
 	int id = 0;
 	// Generate filters of type 1. Totally 5808 filters.
 	for (int time_end = 0; time_end < time_range.size(); time_end++) {
-		for (int band_start = 0; band_start < 32; band_start++) {
-			for (int band_end = band_start + 2; band_end <= 33; band_end++) {
+		for (int band_start = 0; band_start < BINDS_NUM - 1; band_start++) {
+			for (int band_end = band_start + 2; band_end <= BINDS_NUM; band_end++) {
 				Filter filter(id++);
 				filter.type = 1;
 				filter.time_end = time_range[time_end];
@@ -93,8 +103,8 @@ void FilterTraining::_GenerateFilter() {
 
 	// Generate filters of type 2. Totally 5610 filters.
 	for (int time_end = 1; time_end < time_range.size(); time_end++) {
-		for (int band_start = 0; band_start < 33; band_start++) {
-			for (int band_end = band_start + 1; band_end <= 33; band_end++) {
+		for (int band_start = 0; band_start < BINDS_NUM; band_start++) {
+			for (int band_end = band_start + 1; band_end <= BINDS_NUM; band_end++) {
 				Filter filter(id++);
 				filter.type = 2;
 				filter.time_end = time_range[time_end];
@@ -107,8 +117,8 @@ void FilterTraining::_GenerateFilter() {
 
 	// Generate filters of type 3. Totally 5280 filters.
 	for (int time_end = 1; time_end < time_range.size(); time_end++) {
-		for (int band_start = 0; band_start < 32; band_start++) {
-			for (int band_end = band_start + 2; band_end <= 33; band_end++) {
+		for (int band_start = 0; band_start < BINDS_NUM - 1; band_start++) {
+			for (int band_end = band_start + 2; band_end <= BINDS_NUM; band_end++) {
 				Filter filter(id++);
 				filter.type = 3;
 				filter.time_end = time_range[time_end];
@@ -121,8 +131,8 @@ void FilterTraining::_GenerateFilter() {
 
 	// Generate filters of type 4. Totally 5115 filters.
 	for (int time_end = 0; time_end < time_range.size(); time_end++) {
-		for (int band_start = 0; band_start < 30; band_start++) {
-			for (int band_end = band_start + 4; band_end <= 33; band_end++) {
+		for (int band_start = 0; band_start < BINDS_NUM - 3; band_start++) {
+			for (int band_end = band_start + 4; band_end <= BINDS_NUM; band_end++) {
 				Filter filter(id++);
 				filter.type = 4;
 				filter.time_end = time_range[time_end];
@@ -135,8 +145,8 @@ void FilterTraining::_GenerateFilter() {
 
 	// Generate filters of type 5. Totally 4488 filters.
 	for (int time_end = 3; time_end < time_range.size(); time_end++) {
-		for (int band_start = 0; band_start < 33; band_start++) {
-			for (int band_end = band_start + 1; band_end <= 33; band_end++) {
+		for (int band_start = 0; band_start < BINDS_NUM; band_start++) {
+			for (int band_end = band_start + 1; band_end <= BINDS_NUM; band_end++) {
 				Filter filter(id++);
 				filter.type = 5;
 				filter.time_end = time_range[time_end];
@@ -161,12 +171,11 @@ void FilterTraining::_PreparePositiveSamples(const vector<string>& degraded_file
 		string filename = file.substr(file.find_last_of("\\") + 1, file.size());
 		extractor.CreateImage(original_wavepath + "\\" + filename);
 		extractor.GetSamples(&original_samples);
-
 		// Add positive samples.
-		for (size_t i = 0; i < original_samples.size(); i++) {
+		for (size_t i = 0; i < degraded_samples.size(); i++) {
 			SamplePair pair;
-			pair.sample1 = original_samples[i];
-			pair.sample2 = degraded_samples[i];
+			pair.sample1 = degraded_samples[i];
+			pair.sample2 = original_samples[i];
 			pair.label = true;
 			_sample_pairs.push_back(pair);
 		}
@@ -188,13 +197,13 @@ void FilterTraining::_PrepareSamples(const string& original_wavepath,
 	for (int i = 0; i < THREAD_NUM; i++)
 		threads[i].join();
 
-	// Add negative samples.
+	// Prepare negative samples.
 	srand((unsigned)time(NULL));
 	size_t pos_num = _sample_pairs.size();
 	for (size_t neg_num = 0; neg_num < pos_num;) {
 		int neg1 = rand() % pos_num;
 		int neg2 = rand() % pos_num;
-		// Successfully generate a negative sample with different song ids.
+		// Generate a negative sample with different song ids.
 		if (_sample_pairs[neg1].sample1.song_id != _sample_pairs[neg2].sample2.song_id) {
 			SamplePair pair;
 			pair.sample1 = _sample_pairs[neg1].sample1;
