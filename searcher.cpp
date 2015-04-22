@@ -12,11 +12,6 @@
 
 using namespace std;
 
-int hit_number = 0;
-int list_contain_id = 0;
-int sub_fingerprint = 0;
-long long list_len = 0;
-
 bool comp(pair<unsigned int, MusicInfo> a,
 	pair<unsigned int, MusicInfo> b) {
 	return a.first != b.first ?
@@ -131,29 +126,6 @@ int Searcher::Search(int queryId, bitset<32>* finger_block, const int block_size
 		}
 	}
 #endif
-
-#ifdef THREE_BIT_SEARCH
-	for (int i = 0; i < block_size; i++) {
-		for (int j = 0; j < 30; j++)	{
-			for (int k = j + 1; k < 31; k++)	{
-				for (int m = k + 1; m < 32; m++)	{
-					bitset<32> item = finger_block[i];
-					item.flip(j);
-					item.flip(k);
-					item.flip(m);
-					unsigned long key = item.to_ulong();
-					if (key == 0)
-						continue;
-					result = _inner_search(key, finger_block, block_size, i, temp_dif);
-					if (result != -1)
-						return result;
-				}
-			}
-		}
-	}
-#endif
-	return -1;
-	hit_number += result_map.size();
 	if (result_map.size() > 0) {
 		//cerr << result_map.begin()->first << endl;
 		return result_map.begin()->second;
@@ -164,8 +136,6 @@ int Searcher::Search(int queryId, bitset<32>* finger_block, const int block_size
 
 int Searcher::_InnerSearch(int queryId, unsigned long key, bitset<32>* finger_block,
 	const int block_size, const int i, map<double, int>* result_map) {
-	time_t search_start, search_end;
-	search_start = clock();
 	long long result = _BinarySearch(key);
 	if (result == -1)
 		return -1;
@@ -179,22 +149,15 @@ int Searcher::_InnerSearch(int queryId, unsigned long key, bitset<32>* finger_bl
 		end++;
 	} while (end < (signed)_index.size() && _index[end].first == key);
 	end--;
-	sub_fingerprint++;
-	list_len += (end - start + 1);
-	search_end = clock();
-	//duration_search += (double)(search_end - search_start) / CLOCKS_PER_SEC;
 	for (long long iter = start; iter <= end; iter++) {
 		double diffbits = _CompareBitsets(_index[iter].second.id, finger_block,
 			block_size, i, _index[iter].second.i_frame);
 		if (diffbits <= BIT_ERROR_RATE) {
-			//cerr << diffbits << endl;
 			return _index[iter].second.id;
 			(*result_map)[diffbits] = _index[iter].second.id;
-			/*
 			if (diffbits <= MUST_RIGHT) {
-				return index[iter].second.id;
+				return _index[iter].second.id;
 			}
-			*/
 		}
 	}
 	return -1;
@@ -215,16 +178,12 @@ double Searcher::_CompareBitsets(int id, bitset<32>* finger_block, const int blo
 		return INT_MAX;
 	i_frame_in_file -= i_frame_in_block;
 
-	//time_compare_start = clock();
 
 	for (int i = 0; i < block_size; i++) {
 		bitset<32> subfinger_xor = finger_block[i] ^ full_audio_fingers[i_frame_in_file];
 		i_frame_in_file++;
 		diff_bits += (int)subfinger_xor.count();
 	}
-
-	//time_compare_finish = clock();
-	//duration_compare += (double)(time_compare_finish - time_compare_start)/CLOCKS_PER_SEC;
 	return (double)diff_bits / (32 * QUERY_FINGER_NUM);
 }
 

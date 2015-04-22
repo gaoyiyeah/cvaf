@@ -61,7 +61,6 @@ void Util::LoadDirSpecific(std::vector<std::vector<std::string>>& allQueryFiles,
 	if (-1 == handle) {
 		std::cout << "can not find dir or file!" << std::endl;
 	}
-	//std::string path(dirpath + "\\" + fileinfo.name);
 	string filename = string(fileinfo.name);
 	filename = filename.substr(0, filename.find("."));
 	int i_filename = stoi(filename);

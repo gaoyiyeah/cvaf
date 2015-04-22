@@ -69,6 +69,7 @@ void FilterTraining::PringFiltersToFile(const string& filepath) {
 		<< f.band_start << "\t\t" << f.band_end << "\t\t" << f.error_rate
 		<< endl;
 	fout.close();
+	cerr << "Print filters done!" << endl;
 	return;
 }
 
@@ -84,8 +85,6 @@ vector<Filter> FilterTraining::LoadFilters(const string& filepath) {
 void FilterTraining::_GenerateFilter() {
 	// time from 1 frame to FRAME_LENGTH frame in exponential steps of 1.5
 	std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 57, 82};
-	//std::vector<int> time_range = { 1, 2, 3, 5, 7, 11, 17, 25, 38, 41};
-	//vector<int> time_range = { 1, 2, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21 };
 	int id = 0;
 	// Generate filters of type 1. Totally 5808 filters.
 	for (int time_end = 0; time_end < time_range.size(); time_end++) {

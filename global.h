@@ -15,11 +15,11 @@ public:
 };
 typedef std::vector<std::pair<unsigned int, MusicInfo>> IndexType;
 
-const int BINDS_NUM = 32;
+const int BINDS_NUM = 33;
 const int FRAME_LENGTH = 82;
 const int DATABASE_SIZE = 174000;
 const double TIME_INTERVAL = 0.0116;
-const double BIT_ERROR_RATE = 0.1;
+const double BIT_ERROR_RATE = 0.2;
 const double MUST_RIGHT = 0.1;
 const int THREAD_NUM = 10;
 const int OUTPUT_THREAD = 10;
@@ -34,3 +34,4 @@ const std::string FINGER_ROOTPATH = "E:\\yangguang\\cvaf\\data\\fingers";
 const std::string QUERY_WAVE_PATH = "E:\\yangguang\\data\\query\\not_exist\\";
 const std::string INDEX_FILE_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.index";
 const std::string WHOLE_FINGER_PATH = "E:\\yangguang\\cvaf\\data\\index\\20k.finger";
+const std::string FILTER_PATH = "E:\\yangguang\\cvaf\\data\\";

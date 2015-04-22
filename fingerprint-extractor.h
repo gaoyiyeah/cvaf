@@ -16,7 +16,7 @@ const int sampleRate = 5000;
 
 class FingerprintExtractor {
 public:
-	FingerprintExtractor() : _wp(5000){};
+	FingerprintExtractor() : _wp(sampleRate){};
 	void CreateImage(const std::string& filepath);
 	void GetSamples(std::vector<Sample>* samples);
 	void CalcFingerprint(const std::string& filepath,

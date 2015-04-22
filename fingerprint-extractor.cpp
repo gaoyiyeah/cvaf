@@ -10,32 +10,17 @@
 
 using namespace std;
 
-double duration_get_energy = 0;
-time_t energy_start, energy_end;
-
-/*
-const int BINDS_NUM = 33;
+// 33 binds.
 const double freq_bind[] =
-{ 300.000, 317.752, 336.554, 356.469, 377.563,
-399.904, 423.568, 448.632, 475.178, 503.296,
-533.078, 564.622, 598.032, 633.419, 670.901,
-710.600, 752.648, 797.185, 844.357, 894.320,
-947.240, 1003.29, 1062.66, 1125.54, 1192.14,
-1262.68, 1337.40, 1416.54, 1500.36, 1589.14,
-1683.17, 1782.77, 1888.27, 2000.00 }; // Bands in [0, 33]
-*/
-
-// 32 bands.
-const double freq_bind[] =
-{
-	300.000, 318.323, 337.766, 358.396, 380.286,
-	403.513, 428.158, 454.309, 482.057, 511.500,
-	542.741, 575.890, 611.064, 648.387, 687.989,
-	730.009, 774.597, 821.907, 872.107, 925.374,
-	981.893, 1041.86, 1105.50, 1173.02, 1244.67, 
-	1320.69, 1401.35, 1486.94, 1577.76, 1674.13,
-	1776.38, 1884.88, 2000.00
-};
+{ 
+	300.000, 317.752, 336.554, 356.469, 377.563,
+	399.904, 423.568, 448.632, 475.178, 503.296,
+	533.078, 564.622, 598.032, 633.419, 670.901,
+	710.600, 752.648, 797.185, 844.357, 894.320,
+	947.240, 1003.29, 1062.66, 1125.54, 1192.14,
+	1262.68, 1337.40, 1416.54, 1500.36, 1589.14,
+	1683.17, 1782.77, 1888.27, 2000.00
+}; // Bands in [0, 32]
 
 void FingerprintExtractor::CreateImage(const string& filepath) {
 	this->_wavepath = filepath;
@@ -51,7 +36,6 @@ void FingerprintExtractor::CreateImage(const string& filepath) {
 void FingerprintExtractor::CalcFingerprint(const string& filepath,
 	vector<Filter>& filters) {
 	this->CreateImage(filepath);
-	energy_start = clock();
 	for (int frame_idx = 0; frame_idx < _frame_number; frame_idx++) {
 		for (size_t i = 0; i < filters.size(); i++) {
 			double sign = filters[i].GetEnergy(_energy, frame_idx) - filters[i].threshold;
@@ -61,14 +45,12 @@ void FingerprintExtractor::CalcFingerprint(const string& filepath,
 				_fingers[frame_idx][i] = '0';
 		}
 	}
-	energy_end = clock();
-	duration_get_energy += (double)(energy_end - energy_start) / CLOCKS_PER_SEC;
 }
 
 void FingerprintExtractor::GetSamples(vector<Sample>* samples) {
 	samples->clear();
 	int frame_idx = 0;
-	// Get a sample every 10 frames.
+	// Get a sample every 100 frames.
 	for (int start_pos = 0; start_pos < _frame_number; start_pos += 100) {
 		int song_id = this->GetFileId();
 		Sample sample(song_id, frame_idx++);
@@ -95,7 +77,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 	memset(_energy, 0, sizeof(double)* QUERY_FINGER_NUM * BINDS_NUM);
 	_frame_number = 0;
 	int start = 0;
-	int jump_samples = (int)(sampleRate * TIME_INTERVAL); // 5000 means the sample rate.
+	int jump_samples = (int)(sampleRate * TIME_INTERVAL);
 
 	while (start + NumSamplesPerFrameM < all_time_data_size) {
 		short time_data[1850];
@@ -106,10 +88,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 			time_data[i] = _all_time_data[i + start];
 		}
 
-		//FFT_start = clock();
 		DoFFT(time_data, freq_data);
-		//FFT_end = clock();
-		//duration_FFT += (double)(FFT_end - FFT_start) / CLOCKS_PER_SEC;
 		double point_freq = 0;
 		for (int j = 0; j < NumBinsInFftWinM; j++) {
 			//FFT结果第n个点代表的频率值
@@ -122,7 +101,7 @@ int FingerprintExtractor::_Energying(long all_time_data_size) {
 			}
 		}
 		for (int i = 0; i < BINDS_NUM; i++)
-			_energy[_frame_number][i] = log(bind_energy[i] + 1);
+			_energy[_frame_number][i] = log(bind_energy[i] + 1); // Get log after sum up all the energies.
 
 		//下一帧
 		_frame_number++;
